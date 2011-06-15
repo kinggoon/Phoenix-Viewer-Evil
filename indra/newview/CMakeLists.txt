@@ -561,7 +561,10 @@ set(viewer_HEADER_FILES
     CMakeLists.txt
     ViewerInstall.cmake
 
-    cofmgr.h
+    llimportobject.h
+    llfloaterexport.h
+    llfloaterimport.h
+	cofmgr.h
     a_phoenixviewerlink.h
 	chatbar_as_cmdline.h
 	DiamondAoInt.h
