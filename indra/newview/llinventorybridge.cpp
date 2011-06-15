@@ -96,6 +96,7 @@
 #include "llwlparammanager.h"
 #include "jc_lslviewerbridge.h"
 #include "exporttracker.h"
+#include "llimportobject.h" // for disabling options during import
 
 // [RLVa:KB]
 #include "rlvhandler.h"
@@ -1176,14 +1177,13 @@ std::string LLItemBridge::getLabelSuffix() const
 	if(item) 
 	{
 		LLPermissions perm = item->getPermissions();
-		// it's a bit confusing to put nocopy/nomod/etc on calling cards.
-		if(/*LLAssetType::AT_CALLINGCARD != item->getType()
-		   && */perm.getOwner() == gAgent.getID())
+		//
+		if(perm.getOwner() == gAgent.getID())
 		{
-			BOOL copy = item->getPermissions().allowCopyBy(gAgent.getID());
-			BOOL mod = item->getPermissions().allowModifyBy(gAgent.getID());
-			BOOL xfer = item->getPermissions().allowOperationBy(PERM_TRANSFER,
-																gAgent.getID());
+			BOOL copy = perm.allowCopyBy(gAgent.getID());
+			BOOL mod = perm.allowModifyBy(gAgent.getID());
+			BOOL xfer = perm.allowOperationBy(PERM_TRANSFER, gAgent.getID());
+
 			// *TODO: Translate
 			static std::string LINK = " (link)";
 			static std::string BROKEN_LINK = " (broken link)";
@@ -2277,9 +2277,13 @@ void LLFolderBridge::folderOptionsMenu()
 		// Only enable add/replace outfit for non-default folders.
 		if (!is_default_folder)
 		{
+			// <edit> don't allow attaching stuff during attachment import
+			if(!(LLXmlImport::sImportInProgress && LLXmlImport::sImportHasAttachments))
+			{
 			mItems.push_back(std::string("Add To Outfit"));
 			mItems.push_back(std::string("Wear Items"));
 			mItems.push_back(std::string("Replace Outfit"));
+			}
 		}
 		mItems.push_back(std::string("Take Off Items"));
 	}
@@ -3873,9 +3877,11 @@ BOOL LLObjectBridge::isItemRemovable()
 	{
 		return TRUE;
 	}
-	LLVOAvatar* avatar = gAgent.getAvatarObject();
-	if(!avatar) return FALSE;
-	if(avatar->isWearingAttachment(mUUID)) return FALSE;
+	// <edit>
+	//LLVOAvatar* avatar = gAgent.getAvatarObject();
+	//if(!avatar) return FALSE;
+	//if(avatar->isWearingAttachment(mUUID)) return FALSE;
+	// </edit>
 	return LLInvFVBridge::isItemRemovable();
 }
 
@@ -4171,7 +4177,10 @@ void LLObjectBridge::buildContextMenu(LLMenuGL& menu, U32 flags)
 // [/RLVa:KB]
 			}
 			else
-			if( !isInTrash() )
+			// <edit> don't allow attaching objects while importing attachments
+			//if( !isInTrash() )
+			if( !isInTrash() && !(LLXmlImport::sImportInProgress && LLXmlImport::sImportHasAttachments))
+			// </edit>
 			{
 				items.push_back(std::string("Object Wear"));
 				items.push_back(std::string("Object Add"));
@@ -5100,7 +5109,9 @@ BOOL LLWearableBridge::isItemRemovable()
 	{
 		return TRUE;
 	}
-	if(gAgent.isWearingItem(mUUID)) return FALSE;
+	// <edit>
+	//if(gAgent.isWearingItem(mUUID)) return FALSE;
+	// </edit>
 	return LLInvFVBridge::isItemRemovable();
 }
 //k, all uploadable asset types do not use this characteristic; therefore, we can use it to show temporaryness and not interfere cuz we're awesome like that
@@ -5190,12 +5201,14 @@ void LLWearableBridge::openItem()
 	}
 	else if(isAgentInventory())
 	{
-		if( !gAgent.isWearingItem( mUUID ) )
+		if (gAgent.isWearingItem(mUUID))
 		{
-			wearOnAvatar();
+			performAction(NULL, NULL, "take_off");
 		}
 		else
-			performAction(NULL, NULL, "take_off");
+ 		{
+			performAction(NULL, NULL, "wear");
+		}
 	}
 	else
 	{

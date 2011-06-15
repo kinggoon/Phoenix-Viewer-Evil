@@ -59,6 +59,7 @@
 #include "llviewercontrol.h"
 #include "llvoavatar.h"
 #include "llsdutil.h"
+#include "llimportobject.h"
 #include <deque>
 
 // [RLVa:KB]
@@ -1924,6 +1925,9 @@ void LLInventoryModel::addItem(LLViewerInventoryItem* item)
 	{
 		mItemMap[item->getUUID()] = item;
 		//mInventory[item->getUUID()] = item;
+		if(LLXmlImport::sImportInProgress)
+			LLXmlImport::onNewItem(item);
+		// </edit>
 	}
 }
 

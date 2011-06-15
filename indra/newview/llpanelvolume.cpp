@@ -187,7 +187,7 @@ void LLPanelVolume::getState( )
 	owners_identical = LLSelectMgr::getInstance()->selectGetOwner(owner_id, owner_name);
 
 	// BUG? Check for all objects being editable?
-	BOOL editable = root_objectp->permModify();
+	BOOL editable = TRUE;
 	BOOL single_volume = LLSelectMgr::getInstance()->selectionAllPCode( LL_PCODE_VOLUME )
 		&& LLSelectMgr::getInstance()->getSelection()->getObjectCount() == 1;
 

@@ -58,6 +58,7 @@ include_directories(
     ${LLCHARACTER_INCLUDE_DIRS}
     ${LLCOMMON_INCLUDE_DIRS}
     ${LLIMAGE_INCLUDE_DIRS}
+    ${LLKDU_INCLUDE_DIRS}
     ${LLINVENTORY_INCLUDE_DIRS}
     ${LLMATH_INCLUDE_DIRS}
     ${LLMESSAGE_INCLUDE_DIRS}
@@ -76,8 +77,11 @@ include_directories(
 )
 
 set(viewer_SOURCE_FILES
+    llimportobject.cpp
+    llfloaterexport.cpp
+    llfloaterimport.cpp
     cofmgr.cpp
-	lggautocorrectfloater.cpp
+    lggautocorrectfloater.cpp
 	lggautocorrect.cpp
 	lgghunspell_wrapper.cpp
 	lggdicdownload.cpp
@@ -1370,11 +1374,11 @@ set(PACKAGE ${PACKAGE_DEFAULT} CACHE BOOL
     "Add a package target that builds an installer package.")
 
 if (WINDOWS)
-    if(MSVC71)
-        set(release_flags "/MAP:Release/${VIEWER_BINARY_NAME}.map /MAPINFO:LINES")
-    else(MSVC71)
+    if(MSVC10)
+        set(release_flags "/MAPRelease/${VIEWER_BINARY_NAME}.map")
+    else()
         set(release_flags "/MAP:Release/${VIEWER_BINARY_NAME}.map")
-    endif(MSVC71)
+    endif()
     
     set_target_properties(${VIEWER_BINARY_NAME}
         PROPERTIES
@@ -1495,6 +1499,7 @@ target_link_libraries(${VIEWER_BINARY_NAME}
     ${HUNSPELL_LIBRARY}
     ${GROWL_LIBRARY}
     )
+
 
 if (WINDOWS)
   target_link_libraries(${VIEWER_BINARY_NAME}

@@ -440,10 +440,9 @@ void LLPanelObject::getState( )
 	}
 
 	// can move or rotate only linked group with move permissions, or sub-object with move and modify perms
-	BOOL enable_move	= objectp->permMove() /*&& !objectp->isAttachment() */&& (objectp->permModify() || !gSavedSettings.getBOOL("EditLinkedParts"));
-	BOOL enable_scale	= objectp->permMove() && objectp->permModify();
-	//BOOL enable_rotate	= objectp->permMove() && ( (objectp->permModify() && !objectp->isAttachment()) || !gSavedSettings.getBOOL("EditLinkedParts"));
-	BOOL enable_rotate	= objectp->permMove() /*&& !objectp->isAttachment() */&& (objectp->permModify() || !gSavedSettings.getBOOL("EditLinkedParts"));
+	BOOL enable_move	= TRUE;
+	BOOL enable_scale	= TRUE;
+	BOOL enable_rotate	= TRUE;
 	childSetEnabled("build_math_constants",true);
 
 	S32 selected_count = LLSelectMgr::getInstance()->getSelection()->getObjectCount();
@@ -612,7 +611,7 @@ void LLPanelObject::getState( )
 
 	// BUG? Check for all objects being editable?
 	S32 roots_selected = LLSelectMgr::getInstance()->getSelection()->getRootObjectCount();
-	BOOL editable = root_objectp->permModify();
+	BOOL editable = TRUE;
 
 	// Select Single Message
 	childSetVisible("select_single", FALSE);
@@ -2562,8 +2561,6 @@ void LLPanelObject::onCopyParams(void* user_data)
 				for (S32 i = 0; i < items.count(); i++)
 				{
 					LLInventoryItem* itemp = items[i];
-					LLPermissions item_permissions = itemp->getPermissions();
-					if (item_permissions.allowCopyBy(gAgent.getID(), gAgent.getGroupID()))
 					{
 						inventory_item_id = itemp->getUUID();
 						break;
@@ -2575,8 +2572,6 @@ void LLPanelObject::onCopyParams(void* user_data)
 				LLInventoryItem* itemp = gInventory.getItem(inventory_item_id);
 				if (itemp)
 				{
-					LLPermissions perm = itemp->getPermissions();
-					if ( (perm.getMaskBase() & PERM_ITEM_UNRESTRICTED) == PERM_ITEM_UNRESTRICTED )
 						allow_texture = TRUE;
 				}
 			}

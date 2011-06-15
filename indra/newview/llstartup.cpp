@@ -192,6 +192,7 @@
 #include "llwaterparammanager.h"
 #include "llagentlanguage.h"
 #include "llsocks5.h"
+#include "llpanellogin.h"
 #include "floateravatarlist.h"
 #include "scriptcounter.h"
 #include "jcfloater_areasearch.h"
@@ -3258,7 +3259,10 @@ bool update_dialog_callback(const LLSD& notification, const LLSD& response)
 	// *TODO change userserver to be grid on both viewer and sim, since
 	// userserver no longer exists.
 	query_map["userserver"] = LLViewerLogin::getInstance()->getGridLabel();
-	query_map["channel"] = std::string(LL_CHANNEL);
+	// <edit>
+	//query_map["channel"] = LL_CHANNEL;
+	query_map["channel"] = gSavedSettings.getString("SpecifiedChannel");
+
 	// *TODO constantize this guy
 	// *NOTE: This URL is also used in win_setup/lldownloader.cpp
 	LLURI update_url = LLURI::buildHTTP("secondlife.com", 80, "update.php", query_map);

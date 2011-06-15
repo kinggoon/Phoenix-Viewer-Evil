@@ -85,14 +85,23 @@
 	<menu_item_call enabled="true" label="Gestures..." name="Gestures...">
 		<on_click function="ShowFloater" userdata="gestures" />
 	</menu_item_call>
+	<pie_menu label="Extra &gt;" name="More &gt;">
+		<menu_item_call enabled="false" label="AvTextures" mouse_opaque="true" name="AvTextures">
+			<on_click function="Avatar.Debug" />
+		</menu_item_call>
+		<menu_item_separator />
+		<menu_item_call enabled="false" label="AvAnimations" mouse_opaque="true" name="AvAnimations">
+			<on_click function="Avatar.Anims" />
+		</menu_item_call>
+    <menu_item_call enabled="true" label="AvClothings" mouse_opaque="true" name="AvClothings">
+      <on_click function="Object.Clothing" />
+    </menu_item_call>
+	</pie_menu>
 	<menu_item_call enabled="true" label="Appearance..." name="Appearance...">
 		<on_click function="ShowFloater" userdata="appearance" />
 		<on_enable function="Edit.EnableCustomizeAvatar" />
 	</menu_item_call>
-  <menu_item_call enabled="true" label="Textures..." mouse_opaque="true" name="AvTextures">
-    <on_click function="Avatar.Debug" />
-  </menu_item_call>
-  <menu_item_call enabled="false" hidden="false" label="Export" mouse_opaque="true" name="Export">
+	<menu_item_call enabled="false" hidden="false" label="Export" mouse_opaque="true" name="Export">
 		<on_click function="Object.Export" />
 		<on_visible function="Object.VisibleExport" />
 		<on_enable function="Object.EnableExport" />

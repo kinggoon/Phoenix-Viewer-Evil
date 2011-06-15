@@ -497,9 +497,15 @@ void LLPanelFace::getState()
 	LLCalc* calcp = LLCalc::getInstance();
 	if( objectp
 		&& objectp->getPCode() == LL_PCODE_VOLUME
-		&& objectp->permModify())
+		// <edit>
+		//&& objectp->permModify())
+		)
+		// </edit>
 	{
-		BOOL editable = objectp->permModify();
+		// <edit>
+		//BOOL editable = objectp->permModify();
+		BOOL editable = TRUE;
+		// </edit>
 
 		// only turn on auto-adjust button if there is a media renderer and the media is loaded
 		childSetEnabled("textbox autofix",FALSE);
@@ -1185,15 +1191,10 @@ const LLUUID& LLPanelFace::findItemID(const LLUUID& asset_id)
 		for (S32 i = 0; i < items.count(); i++)
 		{
 			LLInventoryItem* itemp = items[i];
-			LLPermissions item_permissions = itemp->getPermissions();
-			if (item_permissions.allowCopyBy(gAgent.getID(), gAgent.getGroupID()))
-			{
-				return itemp->getUUID();
+			return itemp->getUUID();
 			}
 		}
 	}
-	return LLUUID::null;
-}
 
 static LLSD textures;
 
@@ -1231,8 +1232,8 @@ void LLPanelFace::onClickCopy(void* userdata)
 				LLInventoryItem* itemp = gInventory.getItem(inventory_item_id);
 				if (itemp)
 				{
-					LLPermissions perm = itemp->getPermissions();
-					if ( (perm.getMaskBase() & PERM_ITEM_UNRESTRICTED) == PERM_ITEM_UNRESTRICTED )
+					//LLPermissions perm = itemp->getPermissions();
+					//if ( (perm.getMaskBase() & PERM_ITEM_UNRESTRICTED) == PERM_ITEM_UNRESTRICTED )
 						allow_texture = TRUE;
 				}
 			}

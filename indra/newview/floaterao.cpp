@@ -1298,6 +1298,11 @@ void LLFloaterAO::onNotecardLoadComplete(LLVFS *vfs,const LLUUID& asset_uuid,LLA
 							int state = GetStateFromToken(strtoken.c_str());
 							LLUUID animid(getAssetIDByName(stranim));
 
+							LLUUID animUUID = LLUUID(stranim);
+							if (animid.isNull() && animUUID.notNull())
+							{
+								animid = animUUID;
+							}
 							if (!(animid.notNull()))
 							{
 								cmdline_printchat(llformat("Warning: animation '%s' could not be found (Section: %s).",stranim.c_str(),strtoken.c_str()));

@@ -744,14 +744,13 @@ LLPluginClassMedia* LLViewerMediaImpl::newSourceFromMediaType(std::string media_
 			bool cookies_enabled = gSavedSettings.getBOOL( "CookiesEnabled" );
 			media_source->enable_cookies( cookies_enabled );
 
-			//TODO: add and expose the below settings to the UI
 			// collect 'plugins enabled' setting from prefs and send to embedded browser
-			//bool plugins_enabled = gSavedSettings.getBOOL( "BrowserPluginsEnabled" );
-			//media_source->setPluginsEnabled( plugins_enabled );
+			bool plugins_enabled = gSavedSettings.getBOOL( "BrowserPluginsEnabled" );
+			media_source->setPluginsEnabled( plugins_enabled );
 
 			// collect 'javascript enabled' setting from prefs and send to embedded browser
-			//bool javascript_enabled = gSavedSettings.getBOOL( "BrowserJavascriptEnabled" );
-			//media_source->setJavascriptEnabled( javascript_enabled );
+			bool javascript_enabled = gSavedSettings.getBOOL( "BrowserJavascriptEnabled" );
+			media_source->setJavascriptEnabled( javascript_enabled );
 
 			//TODO: see if this is needed at all and change to an overloaded function if needed.
 			//media_source->setTarget(target);

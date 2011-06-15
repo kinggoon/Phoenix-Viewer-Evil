@@ -5215,6 +5215,42 @@ void LLViewerObject::resetChildrenPosition(const LLVector3& offset, BOOL simplif
 }
 
 
+// <edit>
+S32 LLViewerObject::getAttachmentPoint()
+{
+	return ((S32)((((U8)mState & AGENT_ATTACH_MASK) >> 4) | (((U8)mState & ~AGENT_ATTACH_MASK) << 4)));
+}
+
+std::string LLViewerObject::getAttachmentPointName()
+{
+	S32 point = getAttachmentPoint();
+	if((point > 0) && (point < 39))
+	{
+		return gAgent.getAvatarObject()->mAttachmentPoints[point]->getName();
+	}
+	return llformat("unsupported point %d", point);
+}
+// </edit>
+EObjectUpdateType LLViewerObject::getLastUpdateType() const
+{
+	return mLastUpdateType;
+}
+
+void LLViewerObject::setLastUpdateType(EObjectUpdateType last_update_type)
+{
+	mLastUpdateType = last_update_type;
+}
+
+BOOL LLViewerObject::getLastUpdateCached() const
+{
+	return mLastUpdateCached;
+}
+
+void LLViewerObject::setLastUpdateCached(BOOL last_update_cached)
+{
+	mLastUpdateCached = last_update_cached;
+}
+
 const LLUUID &LLViewerObject::extractAttachmentItemID()
 {
 	LLUUID item_id = LLUUID::null;

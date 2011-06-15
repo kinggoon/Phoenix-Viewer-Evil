@@ -59,6 +59,8 @@
 #include "message.h"
 #include "raytrace.h"
 #include "llsdserialize.h"
+#include "llfloaterimport.h"
+#include "llfloaterexport.h"
 #include "lltimer.h"
 #include "llvfile.h"
 #include "llvolumemgr.h"
@@ -1474,10 +1476,10 @@ void init_debug_avatar_menu(LLMenuGL* menu)
 	menu->append(new LLMenuItemToggleGL( "Debug Rotation", &LLVOAvatar::sDebugAvatarRotation));
 	menu->append(new LLMenuItemCallGL("Dump Attachments", handle_dump_attachments));
 	menu->append(new LLMenuItemCallGL("Rebake Textures", handle_rebake_textures, NULL, NULL, 'R', MASK_ALT | MASK_CONTROL ));
-#ifndef LL_RELEASE_FOR_DOWNLOAD
+//#ifndef LL_RELEASE_FOR_DOWNLOAD
 	menu->append(new LLMenuItemCallGL("Debug Avatar Textures", handle_debug_avatar_textures, NULL, NULL, 'A', MASK_SHIFT|MASK_CONTROL|MASK_ALT));
 	menu->append(new LLMenuItemCallGL("Dump Local Textures", handle_dump_avatar_local_textures, NULL, NULL, 'M', MASK_SHIFT|MASK_ALT ));	
-#endif
+//#endif
 	LLMenuItemCallGL* mesh_item = new LLMenuItemCallGL("Meshes And Morphs...", handle_meshes_and_morphs);
 	mesh_item->setUserData((void*)mesh_item);  // So we can remove it later
 	menu->append(mesh_item);
@@ -2467,6 +2469,151 @@ class LLObjectMute : public view_listener_t
 	}
 };
 
+class LLObjectParticle : public view_listener_t
+{
+    bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+    {
+		for (LLObjectSelection::valid_iterator iter = LLSelectMgr::getInstance()->getSelection()->valid_begin();
+			 iter != LLSelectMgr::getInstance()->getSelection()->valid_end(); iter++)
+		{
+			LLSelectNode* node = *iter;
+			if(node->getObject()->isParticleSource())
+			{
+				LLPartSysData thisPartSysData = node->getObject()->mPartSourcep->mPartSysData;
+
+				std::ostringstream script_stream;
+				std::string flags_st="( 0 ";
+				std::string pattern_st="";
+
+				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_INTERP_COLOR_MASK)
+					flags_st.append("\n\t\t\t\t|PSYS_PART_INTERP_COLOR_MASK");
+				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_INTERP_SCALE_MASK)
+					flags_st.append("\n\t\t\t\t|PSYS_PART_INTERP_SCALE_MASK");
+				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_BOUNCE_MASK)
+					flags_st.append("\n\t\t\t\t|PSYS_PART_BOUNCE_MASK");
+				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_WIND_MASK)
+					flags_st.append("\n\t\t\t\t|PSYS_PART_WIND_MASK\n");
+				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_FOLLOW_SRC_MASK)
+					flags_st.append("\n\t\t\t\t|PSYS_PART_FOLLOW_SRC_MASK");
+				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_FOLLOW_VELOCITY_MASK)
+					flags_st.append("\n\t\t\t\t|PSYS_PART_FOLLOW_VELOCITY_MASK");
+				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_TARGET_POS_MASK)
+					flags_st.append("\n\t\t\t\t|PSYS_PART_TARGET_POS_MASK");
+				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_TARGET_LINEAR_MASK)
+					flags_st.append("\n\t\t\t\t|PSYS_PART_TARGET_LINEAR_MASK");
+				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_EMISSIVE_MASK)
+					flags_st.append("\n\t\t\t\t|PSYS_PART_EMISSIVE_MASK");
+
+				switch (thisPartSysData.mPattern)
+				{
+					case 0x01:	pattern_st=" PSYS_SRC_PATTERN_DROP ";		break;
+					case 0x02:	pattern_st=" PSYS_SRC_PATTERN_EXPLODE ";	break;
+					case 0x04:	pattern_st=" PSYS_SRC_PATTERN_ANGLE ";		break;
+					case 0x08:	pattern_st=" PSYS_SRC_PATTERN_ANGLE_CONE ";	break;
+					case 0x10:	pattern_st=" PSYS_SRC_PATTERN_ANGLE_CONE_EMPTY ";	break;
+					default:	pattern_st="0";								break;
+				}
+
+				script_stream << "default\n";
+				script_stream << "{\n";
+				script_stream << "\tstate_entry()\n";
+				script_stream << "\t{\n";
+				script_stream << "\t\tllParticleSystem([\n";
+				script_stream << "\t\t\tPSYS_PART_FLAGS," << flags_st << " ), \n";
+				script_stream << "\t\t\tPSYS_SRC_PATTERN," << pattern_st  << ",\n";
+				script_stream << "\t\t\tPSYS_PART_START_ALPHA," << thisPartSysData.mPartData.mStartColor.mV[3] << ",\n";
+				script_stream << "\t\t\tPSYS_PART_END_ALPHA," << thisPartSysData.mPartData.mEndColor.mV[3] << ",\n";
+				script_stream << "\t\t\tPSYS_PART_START_COLOR,<"<<thisPartSysData.mPartData.mStartColor.mV[0] << ",";
+				script_stream << thisPartSysData.mPartData.mStartColor.mV[1] << ",";
+				script_stream << thisPartSysData.mPartData.mStartColor.mV[2] << "> ,\n";
+				script_stream << "\t\t\tPSYS_PART_END_COLOR,<"<<thisPartSysData.mPartData.mEndColor.mV[0] << ",";
+				script_stream << thisPartSysData.mPartData.mEndColor.mV[1] << ",";
+				script_stream << thisPartSysData.mPartData.mEndColor.mV[2] << "> ,\n";
+				script_stream << "\t\t\tPSYS_PART_START_SCALE,<" << thisPartSysData.mPartData.mStartScale.mV[0] << ",";
+				script_stream << thisPartSysData.mPartData.mStartScale.mV[1] << ",0>,\n";
+				script_stream << "\t\t\tPSYS_PART_END_SCALE,<" << thisPartSysData.mPartData.mEndScale.mV[0] << ",";
+				script_stream << thisPartSysData.mPartData.mEndScale.mV[1] << ",0>,\n";
+				script_stream << "\t\t\tPSYS_PART_MAX_AGE," << thisPartSysData.mPartData.mMaxAge << ",\n";
+				script_stream << "\t\t\tPSYS_SRC_MAX_AGE," <<  thisPartSysData.mMaxAge << ",\n";
+				script_stream << "\t\t\tPSYS_SRC_ACCEL,<"<<  thisPartSysData.mPartAccel.mV[0] << ",";
+				script_stream << thisPartSysData.mPartAccel.mV[1] << ",";
+				script_stream << thisPartSysData.mPartAccel.mV[2] << ">,\n";
+				script_stream << "\t\t\tPSYS_SRC_BURST_PART_COUNT," << (U32) thisPartSysData.mBurstPartCount << ",\n";
+				script_stream << "\t\t\tPSYS_SRC_BURST_RADIUS," << thisPartSysData.mBurstRadius << ",\n";
+				script_stream << "\t\t\tPSYS_SRC_BURST_RATE," << thisPartSysData.mBurstRate << ",\n";
+				script_stream << "\t\t\tPSYS_SRC_BURST_SPEED_MIN," << thisPartSysData.mBurstSpeedMin << ",\n";
+				script_stream << "\t\t\tPSYS_SRC_BURST_SPEED_MAX," << thisPartSysData.mBurstSpeedMax << ",\n";
+				script_stream << "\t\t\tPSYS_SRC_ANGLE_BEGIN," << thisPartSysData.mInnerAngle << ",\n";
+				script_stream << "\t\t\tPSYS_SRC_ANGLE_END," << thisPartSysData.mOuterAngle << ",\n";
+				script_stream << "\t\t\tPSYS_SRC_OMEGA,<" << thisPartSysData.mAngularVelocity.mV[0]<< ",";
+				script_stream << thisPartSysData.mAngularVelocity.mV[1] << ",";
+				script_stream << thisPartSysData.mAngularVelocity.mV[2] << ">,\n";
+				script_stream << "\t\t\tPSYS_SRC_TEXTURE, (key)\"" << node->getObject()->mPartSourcep->getImage()->getID()<< "\",\n";
+				script_stream << "\t\t\tPSYS_SRC_TARGET_KEY, (key)\"" << thisPartSysData.mTargetUUID << "\"\n";
+				script_stream << " \t\t]);\n";
+				script_stream << "\t}\n";
+				script_stream << "}\n";
+				
+				LLChat chat("\nParticle script has been copied to your clipboard\n");
+                LLFloaterChat::addChat(chat);
+                gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(script_stream.str()));
+
+			}
+		}
+		return true;
+	}
+};
+//simms Object UUID
+class LLObjectKey : public view_listener_t
+{
+    bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+    {
+        LLViewerObject* simms = LLSelectMgr::getInstance()->getSelection()->getFirstObject();
+        if(!simms)return true;
+        LLUUID id = simms->getID();
+		char buffer[UUID_STR_LENGTH]; /*Flawfinder: ignore*/
+		id.toString(buffer);
+		gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(buffer));
+		LLChat chat;
+        chat.mText = "Object UUID: "+id.asString();
+		chat.mSourceType = CHAT_SOURCE_SYSTEM;
+        LLFloaterChat::addChat(chat);
+        return true;
+    }
+}; 
+//simms Avatar UUID
+class LLAvatarKey : public view_listener_t
+{
+	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+    {
+		LLVOAvatar* simms = find_avatar_from_object( LLSelectMgr::getInstance()->getSelection()->getPrimaryObject() );
+		if(!simms) return true;
+		
+		LLUUID uuid = simms->getID();
+		char buffer[UUID_STR_LENGTH]; /*Flawfinder: ignore*/
+		uuid.toString(buffer);
+		gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(buffer));
+		LLChat chat;
+        chat.mText = "Avatar UUID: "+uuid.asString();
+		chat.mSourceType = CHAT_SOURCE_SYSTEM;
+        LLFloaterChat::addChat(chat);
+        return true;
+    }
+}; 
+
+/*class LLAvatarAnims : public view_listener_t
+{
+	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+	{
+		LLVOAvatar* avatar = find_avatar_from_object( LLSelectMgr::getInstance()->getSelection()->getPrimaryObject() );
+		if(avatar)
+		{
+			new LLFloaterExploreAnimations(avatar->getID()); //temporary
+		}
+		return true;
+	}
+};
+*/
 class LLObjectVisibleExport : public view_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
@@ -2518,6 +2665,89 @@ class LLObjectExport : public view_listener_t
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
 		JCExportTracker::serializeSelection();
+		return true;
+	}
+};
+
+//---------------------------------------------------------------------------
+// Object import / export
+//---------------------------------------------------------------------------
+
+class LLObjectEnableSaveAs : public view_listener_t
+{
+	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+	{
+		LLViewerObject* object = LLSelectMgr::getInstance()->getSelection()->getPrimaryObject();
+		bool new_value = (object != NULL);
+		gMenuHolder->findControl(userdata["control"].asString())->setValue(new_value);
+		return true;
+	}
+};
+
+class LLObjectSaveAs : public view_listener_t
+{
+	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+	{
+		LLFloaterExport* floater = new LLFloaterExport();
+		floater->center();
+		return true;
+	}
+};
+
+class LLObjectEnableImport : public view_listener_t
+{
+	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+	{
+		LLViewerObject* object = LLSelectMgr::getInstance()->getSelection()->getPrimaryObject();
+		bool new_value = (object != NULL);
+		if(object)
+		{
+			if(!object->permCopy())
+				new_value = false;
+			else if(!object->permModify())
+				new_value = false;
+			else if(!object->permMove())
+				new_value = false;
+			else if(object->numChildren() != 0)
+				new_value = false;
+			else if(object->getParent())
+				new_value = false;
+		}
+		gMenuHolder->findControl(userdata["control"].asString())->setValue(new_value);
+		return true;
+	}
+};
+
+class LLObjectImport : public view_listener_t
+{
+	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+	{
+		LLViewerObject* object = LLSelectMgr::getInstance()->getSelection()->getPrimaryObject();
+		bool new_value = (object != NULL);
+		if(object)
+		{
+			if(!object->permCopy())
+				new_value = false;
+			else if(!object->permModify())
+				new_value = false;
+			else if(!object->permMove())
+				new_value = false;
+			else if(object->numChildren() != 0)
+				new_value = false;
+			else if(object->getParent())
+				new_value = false;
+		}
+		if(new_value == false) return true;
+		
+		LLFilePicker& picker = LLFilePicker::instance();
+		if (!picker.getOpenFile(LLFilePicker::FFLOAD_XML))
+		{
+			return true;
+		}
+		std::string file_name = picker.getFirstFile();
+		LLXmlImportOptions* options = new LLXmlImportOptions(file_name);
+		options->mSupplier = object;
+		new LLFloaterXmlImportOptions(options);
 		return true;
 	}
 };
@@ -2784,8 +3014,8 @@ class LLAvatarEnableDebug : public view_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
-		bool new_value = gAgent.isGodlike();
-		gMenuHolder->findControl(userdata["control"].asString())->setValue(new_value);
+		//bool new_value = gAgent.isGodlike();
+		//gMenuHolder->findControl(userdata["control"].asString())->setValue(new_value);
 		return true;
 	}
 };
@@ -2798,11 +3028,15 @@ class LLAvatarDebug : public view_listener_t
 		if( avatar )
 		{
 			avatar->dumpLocalTextures();
-			/*llinfos << "Dumping temporary asset data to simulator logs for avatar " << avatar->getID() << llendl;
+			// <edit> hell no don't tell them about that
+			/*			
+			llinfos << "Dumping temporary asset data to simulator logs for avatar " << avatar->getID() << llendl;
 			std::vector<std::string> strings;
 			strings.push_back(avatar->getID().asString());
 			LLUUID invoice;
-			send_generic_message("dumptempassetdata", strings, invoice);*/
+			send_generic_message("dumptempassetdata", strings, invoice);
+			*/
+			// </edit>
 			LLFloaterAvatarTextures::show( avatar->getID() );
 		}
 		return true;
@@ -9392,8 +9626,13 @@ void initialize_menus()
 	addMenu(new LLSelfEnableRemoveAllAttachments(), "Self.EnableRemoveAllAttachments");
 
 	 // Avatar pie menu
+	//simms
 	addMenu(new LLObjectVisibleExport(), "Object.VisibleExport");
 	addMenu(new LLObjectEnableExport(), "Object.EnableExport");
+    addMenu(new LLObjectParticle(), "Object.Particle");
+	addMenu(new LLAvatarKey(), "Object.avkey");
+//	addMenu(new LLAvatarAnims(),"Avatar.Anims");
+	//simms
 	addMenu(new LLObjectMute(), "Avatar.Mute");
 	addMenu(new LLAvatarAddFriend(), "Avatar.AddFriend");
 	addMenu(new LLAvatarFreeze(), "Avatar.Freeze");
@@ -9431,6 +9670,11 @@ void initialize_menus()
 // [RLVa:KB] - Alternate: Phoenix-1371 | Checked: 2009-01-17 (RLVa-1.1.0) | Added: RLVa-1.1.0
 	addMenu(new LLObjectEnableDerender(), "Object.EnableDerender");
 // [/RLVa:KB]
+	// <edit>
+	addMenu(new LLObjectSaveAs(), "Object.SaveAs");
+	addMenu(new LLObjectImport(), "Object.Import");
+	addMenu(new LLObjectKey(), "Object.key");
+	// </edit>
 	addMenu(new LLObjectEnableOpen(), "Object.EnableOpen");
 	addMenu(new LLObjectEnableTouch(), "Object.EnableTouch");
 	addMenu(new LLObjectEnableSitOrStand(), "Object.EnableSitOrStand");
@@ -9441,6 +9685,10 @@ void initialize_menus()
 	addMenu(new LLObjectEnableMute(), "Object.EnableMute");
 	addMenu(new LLObjectEnableBuy(), "Object.EnableBuy");
 	addMenu(new LLObjectEnableObjectDisable(), "Object.EnableDisableObject");
+	// <edit>
+	addMenu(new LLObjectEnableSaveAs(), "Object.EnableSaveAs");
+	addMenu(new LLObjectEnableImport(), "Object.EnableImport");
+	// </edit>
 
 	/*addMenu(new LLObjectVisibleTouch(), "Object.VisibleTouch");
 	addMenu(new LLObjectVisibleCustomTouch(), "Object.VisibleCustomTouch");

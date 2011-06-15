@@ -667,11 +667,21 @@ private:
 	static S32 sNumObjects;
 
 public:
+// <edit>
+	S32 getAttachmentPoint();
+	std::string getAttachmentPointName();
+// </edit>
 	const LLUUID &getAttachmentItemID() const { return mAttachmentItemID; }
 	void setAttachmentItemID(const LLUUID &id) { mAttachmentItemID = id; }
 	const LLUUID &extractAttachmentItemID(); // find&set the inventory item ID of the attached object
+	EObjectUpdateType getLastUpdateType() const;
+	void setLastUpdateType(EObjectUpdateType last_update_type);
+	BOOL getLastUpdateCached() const;
+	void setLastUpdateCached(BOOL last_update_cached);
 private:
 	LLUUID mAttachmentItemID; // ItemID when item is in user inventory.
+	EObjectUpdateType	mLastUpdateType;
+	BOOL	mLastUpdateCached;
 };
 typedef std::vector<LLViewerObject*> llvo_vec_t;
 

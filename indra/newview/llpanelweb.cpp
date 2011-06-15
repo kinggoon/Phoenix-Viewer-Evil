@@ -68,6 +68,8 @@ BOOL LLPanelWeb::postBuild()
 	childSetValue("use_external_browser", value);
 
 	childSetValue("cookies_enabled", gSavedSettings.getBOOL("CookiesEnabled"));
+	childSetValue("browser_plugins_enabled", gSavedSettings.getBOOL("BrowserPluginsEnabled"));
+	childSetValue("browser_javascript_enabled", gSavedSettings.getBOOL("CookiesEnabled"));
 
 	childSetValue("web_proxy_enabled", gSavedSettings.getBOOL("BrowserProxyEnabled"));
 	childSetValue("web_proxy_editor", gSavedSettings.getString("BrowserProxyAddress"));
@@ -90,6 +92,9 @@ LLPanelWeb::~LLPanelWeb()
 void LLPanelWeb::apply()
 {
 	gSavedSettings.setBOOL("CookiesEnabled", childGetValue("cookies_enabled"));
+	gSavedSettings.setBOOL("BrowserPluginsEnabled", childGetValue("browser_plugins_enabled"));
+	gSavedSettings.setBOOL("BrowserJavascriptEnabled", childGetValue("browser_javascript_enabled"));
+
 	gSavedSettings.setBOOL("BrowserProxyEnabled", childGetValue("web_proxy_enabled"));
 	gSavedSettings.setString("BrowserProxyAddress", childGetValue("web_proxy_editor"));
 	gSavedSettings.setS32("BrowserProxyPort", childGetValue("web_proxy_port"));
@@ -101,6 +106,8 @@ void LLPanelWeb::apply()
 	if (media_source && media_source->hasMedia())
 	{
 		media_source->getMediaPlugin()->enable_cookies(childGetValue("cookies_enabled"));
+		media_source->getMediaPlugin()->setPluginsEnabled(childGetValue("browser_plugins_enabled"));
+		media_source->getMediaPlugin()->setJavascriptEnabled(childGetValue("browser_javascript_enabled"));
 
 		bool proxy_enable = childGetValue("web_proxy_enabled");
 		std::string proxy_address = childGetValue("web_proxy_editor");

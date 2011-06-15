@@ -87,9 +87,15 @@
 #include "rlvhandler.h"
 // [/RLVa:KB]
 
+
 #ifdef LL_DARWIN
 #include <Carbon/Carbon.h>
 #endif
+
+// <edit>
+#include "llspinctrl.h"
+#include <boost/lexical_cast.hpp>
+// </edit>
 
 #define USE_VIEWER_AUTH 0
 
@@ -117,6 +123,9 @@ public:
 
 LLLoginRefreshHandler gLoginRefreshHandler;
 
+// <edit>
+std::string gFullName;
+// </edit>
 
 
 // helper class that trys to download a URL from a web site and calls a method
@@ -306,7 +315,10 @@ LLPanelLogin::LLPanelLogin(const LLRect &rect,
 	childSetAction("grids_btn", onClickGrids, this);
 	childSetCommitCallback("grids_combo", onSelectGrid, this);
 
-	std::string channel = std::string(LL_CHANNEL);
+	// <edit>
+	//std::string channel = gSavedSettings.getString("VersionChannelName");
+	std::string channel = gSavedSettings.getString("SpecifiedChannel");
+	// </edit>
 	std::string version = llformat("%d.%d.%d (%d)",
 		LL_VERSION_MAJOR,
 		LL_VERSION_MINOR,
@@ -358,6 +370,7 @@ LLPanelLogin::LLPanelLogin(const LLRect &rect,
 		!gHippoGridManager->getConnectedGrid()->getPasswordUrl().empty());
 
 	// kick off a request to grab the url manually
+	
 	gResponsePtr = LLIamHereLogin::build( this );
 
 	std::string login_page = "http://phoenixviewer.com/app/login/"; //gHippoGridManager->getConnectedGrid()->getLoginPage();
@@ -376,7 +389,138 @@ LLPanelLogin::LLPanelLogin(const LLRect &rect,
 	refreshLocation( false );
 #endif
 
+	// <edit>
+	std::string specified_channel = gSavedSettings.getString("SpecifiedChannel");
+	getChild<LLLineEditor>("channel_edit")->setText(specified_channel);
+
+	bool specify_mac = gSavedSettings.getBOOL("SpecifyMAC");
+	bool specify_id0 = gSavedSettings.getBOOL("SpecifyID0");
+	std::string specified_mac = gSavedSettings.getString("SpecifiedMAC");
+	std::string specified_id0 = gSavedSettings.getString("SpecifiedID0");
+
+	// Don't allow specify for empty strings (just in case)
+	if(specified_mac.length() == 0) specify_mac = false;
+	if(specified_id0.length() == 0) specify_id0 = false;
+
+	gSavedSettings.setBOOL("SpecifyMAC", specify_mac);
+	gSavedSettings.setBOOL("SpecifyID0", specify_id0);
+
+	getChild<LLCheckBoxCtrl>("mac_check")->setValue(specify_mac);
+	getChild<LLLineEditor>("mac_edit")->setEnabled(specify_mac);
+	getChild<LLCheckBoxCtrl>("id0_check")->setValue(specify_id0);
+	getChild<LLLineEditor>("id0_edit")->setEnabled(specify_id0);
+
+	childSetEnabled("mac_random_btn",specify_mac);
+	childSetEnabled("id0_random_btn",specify_id0);
+
+	fillMAC();
+	fillID0();
+	fillVer();
+
+	childSetCommitCallback("mac_check", onCheckMAC, this);
+	childSetCommitCallback("id0_check", onCheckID0, this);
+	childSetAction("mac_random_btn", onClickMACRandom, this);
+	childSetAction("id0_random_btn", onClickID0Random, this);
+	// </edit>
 }
+
+// <edit>
+void LLPanelLogin::fillMAC()
+{
+	if(gSavedSettings.getBOOL("SpecifyMAC"))
+	{
+		getChild<LLLineEditor>("mac_edit")->setText(gSavedSettings.getString("SpecifiedMAC"));
+	}
+	else
+	{
+		char hashed_mac_string[MD5HEX_STR_SIZE];
+		LLMD5 hashed_mac;
+		hashed_mac.update( gMACAddress, MAC_ADDRESS_BYTES );
+		hashed_mac.finalize();
+		hashed_mac.hex_digest(hashed_mac_string);
+		getChild<LLLineEditor>("mac_edit")->setText(std::string(hashed_mac_string));
+	}
+}
+
+void LLPanelLogin::fillID0()
+{
+	if(gSavedSettings.getBOOL("SpecifyID0"))
+	{
+		getChild<LLLineEditor>("id0_edit")->setText(gSavedSettings.getString("SpecifiedID0"));
+	}
+	else
+	{
+		getChild<LLLineEditor>("id0_edit")->setText(LLAppViewer::instance()->getSerialNumber());
+	}
+}
+
+void LLPanelLogin::fillVer()
+{
+	getChild<LLSpinCtrl>("vermaj_spin")->forceSetValue((S32)gSavedSettings.getU32("SpecifiedVersionMaj"));
+	getChild<LLSpinCtrl>("vermin_spin")->forceSetValue((S32)gSavedSettings.getU32("SpecifiedVersionMin"));
+	getChild<LLSpinCtrl>("verpatch_spin")->forceSetValue((S32)gSavedSettings.getU32("SpecifiedVersionPatch"));
+	getChild<LLSpinCtrl>("verbuild_spin")->forceSetValue((S32)gSavedSettings.getU32("SpecifiedVersionBuild"));
+}
+
+// static
+void LLPanelLogin::onCheckMAC(LLUICtrl* ctrl, void* userData)
+{
+	LLPanelLogin* panel = (LLPanelLogin*)userData;
+	bool enabled = ((LLCheckBoxCtrl*)ctrl)->getValue();
+	gSavedSettings.setBOOL("SpecifyMAC", enabled);
+	panel->getChild<LLLineEditor>("mac_edit")->setEnabled(enabled);
+	panel->childSetEnabled("mac_random_btn",enabled);
+	panel->fillMAC();
+}
+
+// static
+void LLPanelLogin::onCheckID0(LLUICtrl* ctrl, void* userData)
+{
+	LLPanelLogin* panel = (LLPanelLogin*)userData;
+	bool enabled = ((LLCheckBoxCtrl*)ctrl)->getValue();
+	gSavedSettings.setBOOL("SpecifyID0", enabled);
+	panel->getChild<LLLineEditor>("id0_edit")->setEnabled(enabled);
+	panel->childSetEnabled("id0_random_btn",enabled);
+	panel->fillID0();
+}
+// static
+void LLPanelLogin::onClickMACRandom(void* userData)
+{
+	LLPanelLogin* panel = (LLPanelLogin*)userData;
+	unsigned char seed[16];		/* Flawfinder: ignore */
+	LLUUID::getNodeID(&seed[0]);
+	seed[6]='U';
+	seed[7]='W';
+	LLUUID::getSystemTime((uuid_time_t *)(&seed[8]));
+
+	char hash_string[MD5HEX_STR_SIZE];
+	LLMD5 hash;
+	hash.update( seed , 16 );
+	hash.finalize();
+	hash.hex_digest(hash_string);
+	gSavedSettings.setString("SpecifiedMAC",std::string(hash_string));
+	panel->fillMAC();
+}
+
+// static
+void LLPanelLogin::onClickID0Random(void* userData)
+{
+	LLPanelLogin* panel = (LLPanelLogin*)userData;
+	unsigned char seed[16];		/* Flawfinder: ignore */
+	LLUUID::getNodeID(&seed[0]);
+	seed[6]='W';
+	seed[7]='U';
+	LLUUID::getSystemTime((uuid_time_t *)(&seed[8]));
+
+	char hash_string[MD5HEX_STR_SIZE];
+	LLMD5 hash;
+	hash.update( seed , 16 );
+	hash.finalize();
+	hash.hex_digest(hash_string);
+	gSavedSettings.setString("SpecifiedID0",std::string(hash_string));
+	panel->fillID0();
+}
+// </edit>
 
 void LLPanelLogin::setSiteIsAlive( bool alive )
 {
@@ -945,16 +1089,19 @@ void LLPanelLogin::loadLoginPage()
 
 	// Channel and Version
 	std::string version = llformat("%d.%d.%d (%d)",
-						LL_VERSION_MAJOR, LL_VERSION_MINOR, LL_VERSION_PATCH, LL_VIEWER_BUILD);
+						gSavedSettings.getU32("SpecifiedVersionMaj"), gSavedSettings.getU32("SpecifiedVersionMin"), gSavedSettings.getU32("SpecifiedVersionPatch"), gSavedSettings.getU32("SpecifiedVersionBuild"));
 
-	char* curl_channel = curl_escape(LL_CHANNEL, 0);
+	//char* curl_channel = curl_escape(gSavedSettings.getString("VersionChannelName").c_str(), 0);
+	char* curl_channel = curl_escape(gSavedSettings.getString("SpecifiedChannel").c_str(), 0);
 	char* curl_version = curl_escape(version.c_str(), 0);
 	
 	oStr << "&channel=" << curl_channel;
 	oStr << "&version=" << curl_version;
-	
-	if(LL_CHANNEL != PHOENIX_RELEASE_CHANNEL)
+
+//<edit>
+	if(gSavedSettings.getString("SpecifiedChannel").c_str() != PHOENIX_RELEASE_CHANNEL)
 		oStr << "&unsupported=1";
+	//</edit>
 
 	curl_free(curl_channel);
 	curl_free(curl_version);
@@ -1160,6 +1307,38 @@ void LLPanelLogin::onClickConnectReal(void *)
 {
 	if (sInstance && sInstance->mCallback)
 	{
+		// <edit> save identity settings for login
+		bool specify_mac = sInstance->getChild<LLCheckBoxCtrl>("mac_check")->getValue();
+		bool specify_id0 = sInstance->getChild<LLCheckBoxCtrl>("id0_check")->getValue();
+		
+		gSavedSettings.setBOOL("SpecifyMAC", specify_mac);
+		gSavedSettings.setBOOL("SpecifyID0", specify_id0);
+		
+		if(specify_mac)
+		{
+			std::string specified_mac = sInstance->getChild<LLLineEditor>("mac_edit")->getText();
+			gSavedSettings.setString("SpecifiedMAC", specified_mac);
+		}
+		
+		if(specify_id0)
+		{
+			std::string specified_id0 = sInstance->getChild<LLLineEditor>("id0_edit")->getText();
+			gSavedSettings.setString("SpecifiedID0", specified_id0);
+		}
+		
+		std::string specified_channel = sInstance->getChild<LLLineEditor>("channel_edit")->getText();
+		gSavedSettings.setString("SpecifiedChannel", specified_channel);
+		
+		U32 specified_ver_maj = (U32)sInstance->getChild<LLSpinCtrl>("vermaj_spin")->getValue().asInteger();
+		gSavedSettings.setU32("SpecifiedVersionMaj", specified_ver_maj);
+		U32 specified_ver_min = (U32)sInstance->getChild<LLSpinCtrl>("vermin_spin")->getValue().asInteger();
+		gSavedSettings.setU32("SpecifiedVersionMin", specified_ver_min);
+		U32 specified_ver_patch = (U32)sInstance->getChild<LLSpinCtrl>("verpatch_spin")->getValue().asInteger();
+		gSavedSettings.setU32("SpecifiedVersionPatch", specified_ver_patch);
+		U32 specified_ver_build = (U32)sInstance->getChild<LLSpinCtrl>("verbuild_spin")->getValue().asInteger();
+		gSavedSettings.setU32("SpecifiedVersionBuild", specified_ver_build);
+		
+		// </edit>
 		// tell the responder we're not here anymore
 		if ( gResponsePtr )
 			gResponsePtr->setParent( 0 );

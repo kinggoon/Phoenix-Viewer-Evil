@@ -230,10 +230,13 @@ std::string LLFloaterAbout::get_viewer_release_notes_url()
 std::string LLFloaterAbout::get_viewer_version()
 {
 	return std::string(LLAppViewer::instance()->getSecondLifeTitle()
-		+ llformat(" %d.%d.%d (%d) %s %s (%s)\n",
-		LL_VERSION_MAJOR, LL_VERSION_MINOR, LL_VERSION_PATCH, LL_VIEWER_BUILD,
-		__DATE__, __TIME__,
-		LL_CHANNEL));
+		+ llformat(" %d.%d.%d (%d) %s (%s)\n",
+       gSavedSettings.getU32("SpecifiedVersionMaj"),
+       gSavedSettings.getU32("SpecifiedVersionMin"),
+       gSavedSettings.getU32("SpecifiedVersionPatch"),
+       gSavedSettings.getU32("SpecifiedVersionBuild"),
+       gSavedSettings.getString("SpecifiedBuildTimeStamp").c_str() ,// __DATE__, __TIME__,
+       gSavedSettings.getString("SpecifiedChannel").c_str()) );
 }
 std::string LLFloaterAbout::get_viewer_build_version()
 {
@@ -245,9 +248,9 @@ std::string LLFloaterAbout::get_viewer_build_version()
 	flags += " (";
 #ifdef SSE2
 	flags += "SSE2";
-#ifdef LAA
+//#ifdef LAA
 	flags += ", LAA";
-#endif //LAA
+//#endif //LAA
 	flags += ")";
 #else defined(LAA)
 	flags += "LAA)";

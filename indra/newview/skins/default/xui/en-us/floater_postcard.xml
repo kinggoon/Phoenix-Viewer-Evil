@@ -34,11 +34,7 @@
 	     max_length="700" name="msg_form" width="420">
 		Type your message here.
 	</text_editor>
-	<text bottom_delta="-37" follows="left|bottom" font="SansSerifSmall" left="12"
-	     name="fine_print">
-		If your recipient joins SL, you&apos;ll get a referral bonus.
-	</text>
-	<button bottom_delta="-32" follows="right|bottom" height="20" label="Cancel"
+	<button bottom_delta="-69" follows="right|bottom" height="20" label="Cancel"
 	     name="cancel_btn" right="-10" width="100" />
 	<button bottom_delta="0" follows="right|bottom" height="20" label="Send"
 	     left_delta="-106" name="send_btn" width="100" />

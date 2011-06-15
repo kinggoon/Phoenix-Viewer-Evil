@@ -35,6 +35,28 @@
 	     label="Accept cookies from sites" left="140" mouse_opaque="true"
 	     name="cookies_enabled" radio_style="false" width="256" />
 	<text type="string" length="1" bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
+	     bottom_delta="-30" drop_shadow_visible="true" enabled="true"
+	     follows="left|top" font="SansSerifSmall" h_pad="0" halign="left"
+	     height="10" left="15" mouse_opaque="false" name="browser_javascript_label" v_pad="0"
+	     width="128">
+		Javascript:
+	</text>
+	<check_box bottom_delta="-7" enabled="true" follows="left|top" 
+		 font="SansSerifSmall" height="16" initial_value="false"
+	     label="Run javascript from sites" left="140" mouse_opaque="true"
+	     name="browser_javascript_enabled" radio_style="false" width="256" />
+	<text type="string" length="1" bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
+	     bottom_delta="-30" drop_shadow_visible="true" enabled="true"
+	     follows="left|top" font="SansSerifSmall" h_pad="0" halign="left"
+	     height="10" left="15" mouse_opaque="false" name="browser_plugins_label" v_pad="0"
+	     width="128">
+		Plugins:
+	</text>
+	<check_box bottom_delta="-7" enabled="true" follows="left|top" 
+		 font="SansSerifSmall" height="16" initial_value="false"
+	     label="Enable browser plugins" left="140" mouse_opaque="true"
+	     name="browser_plugins_enabled" radio_style="false" width="256" />
+	<text type="string" length="1" bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
 	     bottom_delta="-24" drop_shadow_visible="true" enabled="true"
 	     follows="left|top" font="SansSerifSmall" h_pad="0" halign="left"
 	     height="10" left="15" mouse_opaque="false" name="proxy_label" v_pad="0"

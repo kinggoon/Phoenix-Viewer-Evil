@@ -282,6 +282,34 @@ copy_if_different(
     )
 set(all_targets ${all_targets} ${out_targets})
 
+if (WINDOWS)
+    FIND_PATH(release_msvc10_redist_path msvcr100.dll
+        PATHS
+        ${MSVC_REDIST_PATH}
+	if ARCH_TYPE=x64		
+		 [HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\10.0\\Setup\\VC;ProductDir]/redist/x86/Microsoft.VC100.CRT
+	endif ARCH_TYPE=x64
+	if ARCH_TYPE=x86
+		[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\10.0\\Setup\\VC;ProductDir]/redist/x86/Microsoft.VC100.CRT
+	endif ARCH_TYPE=x86
+        NO_DEFAULT_PATH
+        NO_DEFAULT_PATH
+        )
+    if(EXISTS ${release_msvc10_redist_path})
+        set(release_msvc10_files
+            msvcr100.dll
+            msvcp100.dll
+            )
+
+        copy_if_different(
+            ${release_msvc10_redist_path} 
+            "${CMAKE_CURRENT_BINARY_DIR}/Release"
+            out_targets 
+            ${release_msvc10_files}
+            )
+        set(all_targets ${all_targets} ${out_targets})
+	endif(EXISTS ${release_msvc10_redist_path})
+endif (WINDOWS)	
 set(internal_llkdu_path "${CMAKE_SOURCE_DIR}/llkdu")
 if(EXISTS ${internal_llkdu_path})
     set(internal_llkdu_src "${CMAKE_BINARY_DIR}/llkdu/${CMAKE_CFG_INTDIR}/llkdu.dll")

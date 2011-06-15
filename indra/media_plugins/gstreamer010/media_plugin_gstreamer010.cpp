@@ -670,7 +670,6 @@ MediaPluginGStreamer010::getDuration(double &sec_out)
 		gint64 dur;
 		GstFormat timefmt = GST_FORMAT_TIME;
 		got_duration =
-			gst_element_query_duration &&
 			gst_element_query_duration(mPlaybin,
 						     &timefmt,
 						     &dur);

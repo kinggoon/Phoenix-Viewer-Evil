@@ -49,8 +49,8 @@ Please enjoy!
 Minimum requirements:
     * Internet Connection: Cable or DSL
     * Computer Processor: 800MHz Pentium III or Athlon or better
-      (recommended: 1.5GHz or more)
-    * Computer Memory: 512MB (recommended: 768MB or more)
+      (recommended: 1.5GHz or more with SSE2 capibility)
+    * Computer Memory: 512MB (recommended: 1GB or more)
     * Linux Operating System: A reasonably modern 32-bit Linux environment
           is required.  If you are running a 64-bit Linux distribution then
           you will need its 32-bit compatibility environment installed, but
@@ -58,7 +58,7 @@ Minimum requirements:
     * Video/Graphics Card:
           o nVidia GeForce 2, GeForce 4mx, or better (recommend one of the
             following: 6700, 6800, 7600, 7800, 7900, 8400, 8500, 8600,
-            8800, Go 7400, Go 7600, Go 7800, Go 7900)
+            8800, 9200 or better, 2xx series, 3xx series, 4xx series, 5xx series)
           o OR ATI Radeon 8500, 9250, or better
           (nVidia cards are recommended for the Linux client)
 
@@ -78,7 +78,7 @@ Life Linux client is very similar to that for Windows, as detailed at:
 The Second Life Linux client entirely runs out of the directory you have
 unpacked it into - no installation step is required.
 
-Run ./secondlife from the installation directory to start Second Life.
+Run ./snowglobe from the installation directory to start Second Life.
 
 For in-world MOVIE and MUSIC PLAYBACK, you will need (32-bit) GStreamer 0.10
 installed on your system.  This is optional - it is not required for general
@@ -93,7 +93,7 @@ override this location with the SECONDLIFE_USER_DIR environment variable if
 you wish.
 
 
-4. KNOWN ISSUES
+4. KNOWN ISSUES - Not relivent to Phoenx (left over from snowglobe repository)
 -=-=-=-=-=-=-=-
 
 * UPDATING - when the client detects that a new version of Second Life

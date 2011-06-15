@@ -74,6 +74,7 @@
 #include "object_flags.h"
 
 #include "llappviewer.h"
+#include "llimportobject.h"
 #include "floaterblacklist.h"
 
 extern F32 gMinObjectDistance;
@@ -260,6 +261,22 @@ void LLViewerObjectList::processUpdateCore(LLViewerObject* objectp,
 	// so that the drawable parent is set properly
 	findOrphans(objectp, msg->getSenderIP(), msg->getSenderPort());
 	
+	// <edit>
+	if (just_created
+		&& update_type != OUT_TERSE_IMPROVED
+		&& LLXmlImport::sImportInProgress)
+	{
+		LLViewerObject* parent = (LLViewerObject*)objectp->getParent();
+		if(parent)
+		{
+			if(parent->getID() == gAgent.getID())
+			{
+				LLXmlImport::onNewAttachment(objectp);
+			}
+		}
+	}
+	//</edit>
+	
 	if(just_created && objectp)
 	{
 		if((gImportTracker.getState() == ImportTracker::WAND) || (
@@ -290,6 +307,18 @@ void LLViewerObjectList::processUpdateCore(LLViewerObject* objectp,
 		objectp->mCreateSelected = false;
 		gViewerWindow->getWindow()->decBusyCount();
 		gViewerWindow->getWindow()->setCursor( UI_CURSOR_ARROW );
+		
+		// <edit>
+		if(LLXmlImport::sImportInProgress)
+		{
+			if( objectp->permYouOwner()
+				&& (objectp->getPCode() == LLXmlImport::sSupplyParams->getPCode())
+				&& (objectp->getScale() == LLXmlImport::sSupplyParams->getScale()))
+			{
+				LLXmlImport::onNewPrim(objectp);
+			}
+		}
+		// </edit>	
 	}
 }
 
